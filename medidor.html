@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medidor de AM & DD — Versão 0.2 (Guiado)</title>
+    <style>
+        :root {
+            --bg: #0d1014; --card: #171c22; --card2: #20262e; --text: #eef2f6; --muted: #9ba6b2;
+            --line: #303944; --accent: #8fd3ff; --good: #86d6a5; --warn: #ffd27d; --bad: #ff9c9c; --gold: #d4af37;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: linear-gradient(145deg, #0b0e12, #151a20); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        main { max-width: 900px; margin: auto; padding: 28px 18px 60px; }
+        .hero { padding: 22px 4px 18px; }
+        .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; }
+        h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1; margin: 8px 0 12px; }
+        h2 { font-size: 21px; margin: 0 0 7px; color: var(--accent); }
+        h3 { font-size: 16px; margin: 20px 0 7px; }
+        .lead { color: var(--muted); max-width: 720px; line-height: 1.55; }
+        .card { background: rgba(23,28,34,.96); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin: 14px 0; box-shadow: 0 12px 35px #0003; }
+        .small { font-size: 13px; color: var(--muted); line-height: 1.45; }
+        input[type="text"], textarea, select { width: 100%; background: #0e1318; color: var(--text); border: 1px solid var(--line); border-radius: 11px; padding: 12px; font: inherit; outline: none; margin-top: 10px; }
+        textarea { min-height: 80px; resize: vertical; }
+        .row { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: flex-start; margin: 15px 0; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        label { display: block; }
+        .param-title-wrap { display: flex; align-items: center; gap: 8px; }
+        .info-btn { background: rgba(143, 211, 255, 0.15); color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; padding: 0; }
+        .help-box { margin-top: 8px; font-size: 12px; color: #c0cb33; background: rgba(192, 203, 51, 0.08); border-left: 3px solid #c0cb33; padding: 8px 10px; border-radius: 6px; line-height: 1.4; }
+        .value { min-width: 52px; text-align: right; font-weight: 800; color: var(--accent); font-size: 18px; padding-top: 4px; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; margin-top: 8px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric { background: var(--card2); padding: 15px; border-radius: 13px; }
+        .metric b { font-size: 26px; }
+        .metric span { display: block; color: var(--muted); font-size: 13px; }
+        button { border: 0; border-radius: 12px; padding: 13px 17px; font: 700 15px system-ui; cursor: pointer; background: var(--accent); color: #081018; margin: 5px 6px 5px 0; }
+        button:hover { opacity: .88; }
+        button.secondary { background: #2a313a; color: var(--text); }
+        .results { display: none; }
+        .bar { height: 14px; background: #0c1014; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+        .fill { height: 100%; width: 0; background: var(--accent); transition: .3s; }
+        .verdict { padding: 17px; border-radius: 14px; background: #11161b; border: 1px solid var(--line); line-height: 1.55; margin-top: 15px; }
+        .kicker { font-weight: 800; font-size: 14px; color: var(--accent); }
+        .quote { font-size: 18px; line-height: 1.4; margin: 8px 0 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+        td { padding: 9px 5px; border-bottom: 1px solid var(--line); }
+        td:last-child { text-align: right; font-weight: 700; }
+        .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+        @media(max-width:650px) { .grid { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr auto; } main { padding: 18px 13px 45px; } }
+    </style>
+</head>
+<body>
+<main>
+<section class="hero">
+    <div class="eyebrow">Versão 0.2 · Modelo de Alavancagem Causal Guiado</div>
+    <h1>Medidor de AM & DD</h1>
+    <p class="small" style="margin-bottom: 12px;"><a href="index.html" style="color: var(--accent); text-decoration: none;">← Voltar ao Manual do Sistema</a></p>
+    <p class="lead">Uma ferramenta com orientação integrada para avaliar a capacidade de alterar uma trajetória perante a pressão da rotina.<br><br><b>AM</b> = Ação Moduladora (Recursos e Capacidade de intervenção).<br><b>DD</b> = Dinâmica Dominante (Inércia e Pressões da rotina).<br><b>EA</b> = Eficiência da Ação (Alavancagem estratégica).</p>
+</section>
+
+<section class="card">
+    <h2>1. Define o objetivo de trajetória</h2>
+    <p class="small">Escolhe uma mudança concreta. Quanto mais específico o objetivo, mais preciso é o diagnóstico.</p>
+    <input id="goal" type="text" placeholder="Ex.: me tornar treinador de futebol, criar projeto próprio, pagar dívida...">
+    <textarea id="context" placeholder="Opcional: descreve a situação atual e as principais limitações..."></textarea>
+</section>
+
+<section class="card">
+    <h2>2. AM disponível (Recursos e Capacidade)</h2>
+    <p class="small">Avalia os teus recursos REAIS de ação no presente (0 = inexistente, 100 = pleno e totalmente livre).</p>
+    <div id="am"></div>
+    <div class="grid">
+        <div class="metric"><span>AM média</span><b id="amAvg">0</b></div>
+        <div class="metric"><span>Capacidade efetiva</span><b id="amLevel">—</b></div>
+    </div>
+</section>
+
+<section class="card">
+    <h2>3. DD — O que continua a empurrar a tua trajetória</h2>
+    <p class="small">Avalia a força inercial do teu meio e rotina que atua CONTRA a mudança (0 = sem pressão, 100 = pressão esmagadora).</p>
+    <div id="dd"></div>
+    <div class="grid">
+        <div class="metric"><span>DD média</span><b id="ddAvg">0</b></div>
+        <div class="metric"><span>Pressão dominante</span><b id="ddLevel">—</b></div>
+    </div>
+</section>
+
+<section class="card">
+    <h2>4. Interações da DD e Eficiência da Ação (EA)</h2>
+    <p class="small">Define como as tuas pressões se ligam entre si e a qualidade estratégica da tua ação.</p>
+    <div class="row">
+        <div>
+            <div class="param-title-wrap">
+                <label><b>Retroalimentação da DD</b></label>
+                <button class="info-btn" onclick="toggleHelp('help-feedback')">?</button>
+            </div>
+            <span class="small">0 = fatores independentes · 100 = ciclo onde um problema alimenta o outro</span>
+            <div class="help-box" id="help-feedback" style="display:none;">
+                <strong>O que é:</strong> Mede o quanto os teus problemas se multiplicam entre si.<br>
+                <strong>Como mover:</strong> Baixas este valor quando começas a isolar os problemas para não deixares uma área afetar a outra.
+            </div>
+            <input id="feedback" type="range" min="0" max="100" value="30">
+        </div>
+        <div class="value" id="feedbackVal">30</div>
+    </div>
+    <div style="margin-top: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 12px;">
+        <div class="param-title-wrap">
+            <label><b>Tipo de Intervenção Proposta (Eficiência — EA)</b></label>
+            <button class="info-btn" onclick="toggleHelp('help-ea')">?</button>
+        </div>
+        <span class="small">A forma como aplicas a tua AM altera drasticamente o seu efeito real:</span>
+        <div class="help-box" id="help-ea" style="display:none;">
+            <strong>O que é o EA:</strong> É o multiplicador de inteligência estratégica.<br>
+            • <strong>0.5 (Força Bruta):</strong> Trabalhar mais horas sem plano. Gera exaustão.<br>
+            • <strong>1.0 (Ação Direta):</strong> Executar tarefas sem alterar as condições ao teu redor.<br>
+            • <strong>1.8 (Estratégica):</strong> Criar sistemas ou mudar o ambiente para que o esforço renda o dobro.
+        </div>
+        <select id="eaSelect">
+            <option value="0.5">Compensatória / Voluntarista (EA = 0.5)</option>
+            <option value="1.0" selected>Pontual / Direta (EA = 1.0)</option>
+            <option value="1.8">Estrutural / Alavancada (EA = 1.8)</option>
+        </select>
+    </div>
+</section>
+
+<section class="card">
+    <h2>5. Processamento do modelo</h2>
+    <p class="small">Calcula o Efeito Efetivo (AM × EA) e compara-o com a Dinâmica Dominante (DD).</p>
+    <button onclick="calculate()">Calcular Alavancagem</button>
+    <button class="secondary" onclick="fillExample()">Carregar exemplo</button>
+    <button class="secondary" onclick="window.print()">Imprimir / PDF</button>
+</section>
+
+<section class="card results" id="results">
+    <h2>Resultado do Diagnóstico</h2>
+    <div class="grid">
+        <div class="metric"><span>AM disponível</span><b id="rAM">0</b><div class="bar"><div id="barAM" class="fill"></div></div></div>
+        <div class="metric"><span>DD efetiva</span><b id="rDD">0</b><div class="bar"><div id="barDD" class="fill"></div></div></div>
+        <div class="metric"><span>Efeito Efetivo (AM × EA)</span><b id="rEffAM">0</b></div>
+        <div class="metric"><span>Alteração Real de Trajetória</span><b id="rMargin">0</b></div>
+    </div>
+    <div class="verdict">
+        <div class="kicker" id="rTitle"></div>
+        <div id="rText"></div>
+        <p class="quote" id="rQuote"></p>
+    </div>
+    <h3>1. Maiores Pressões de DD (Forças a Reduzir)</h3>
+    <table id="ddTable"></table>
+    <h3>2. Maiores Défices de AM (Capacidades a Expandir)</h3>
+    <table id="amTable"></table>
+    <h3>Recomendação de Menor Custo (Alavancagem Causal)</h3>
+    <div class="verdict" id="strategy"></div>
+    <h3>Teste de Trajetória de Menor Esforço</h3>
+    <p class="small">Escolhe uma alteração estrutural simples para as próximas 2–4 semanas.</p>
+    <textarea id="experiment" placeholder="Ex.: reservar 45 min inegociáveis..."></textarea>
+    <button onclick="saveTest()">Guardar teste local</button>
+    <button class="secondary" onclick="loadTest()">Recuperar teste</button>
+</section>
+
+<section class="card">
+    <h2>Princípio do modelo</h2>
+    <p class="small">A ferramenta não afirma que toda a realidade pode ser reduzida a estes números. É um modelo experimental.</p>
+    <p class="quote">“Se a AM applied é ineficiente, aumentar o esforço produz apenas exaustão.”</p>
+</section>
+<div class="footer">Medidor de AM & DD · Versão 0.2 Guiada · Modelo experimental de Zimous</div>
+</main>
+
+<script>
+const amItems = [
+    ["Tempo", "Quanto tempo real tens disponível para agir?", "<b>O que é:</b> Horas reais semanais sem compromissos.<br><b>Como mover:</b> Bloqueia blocos fixos de tempo."],
+    ["Energia", "Quanta energia física e mental sobra depois das obrigações?", "<b>O que é:</b> Vigor e clareza mental após o trabalho.<br><b>Como mover:</b> Melhora o sono e alimentação."],
+    ["Recursos", "Dinheiro, equipamento e recursos materiais disponíveis.", "<b>O que é:</b> Capital guardado e ferramentas.<br><b>Como mover:</b> Poupança direcionada."],
+    ["Conhecimento", "Conhecimento necessário para executar o próximo passo.", "<b>O que é:</b> Domínio prático do que deves fazer.<br><b>Como mover:</b> Estudo focado."],
+    ["Mobilidade", "Quanto consegues alterar horários, local, rotina ou condições.", "<b>O que é:</b> Flexibilidade de movimentos.<br><b>Como mover:</b> Negociação de horários."],
+    ["Apoio", "Pessoas, instituições ou rede que podem aumentar a tua capacidade.", "<b>O que é:</b> Alianças e mentores.<br><b>Como mover:</b> Fazer networking."],
+    ["Margem de risco", "Quanto podes errar ou perder sem comprometer a estabilidade atual.", "<b>O que é:</b> Segurança financeira.<br><b>Como mover:</b> Construir fundo de reserva."]
+];
+const ddItems = [
+    ["Trabalho / obrigações", "Pressão das responsabilidades que consomem tempo e energia.", "<b>O que é:</b> Exigências do emprego atual.<br><b>Como mover:</b> Simplifica tarefas."],
+    ["Pressão financeira", "Despesas, rendimento insuficiente, dívidas ou falta de reserva.", "<b>O que é:</b> Urgência de pagar contas.<br><b>Como mover:</b> Reduz custos fixos."],
+    ["Desgaste", "Cansaço físico ou mental acumulado.", "<b>O que é:</b> Acúmulo de estresse.<br><b>Como mover:</b> Tira momentos de descanso."],
+    ["Hábitos / inércia", "Quanto a rotina atual tende a reproduzir-se automaticamente.", "<b>O que é:</b> Piloto automático.<br><b>Como mover:</b> Quebra pequenas rotinas."],
+    ["Ambiente", "Condições externas que dificultam a mudança.", "<b>O que é:</b> Meio com distrações.<br><b>Como mover:</b> Prepara um espaço limpo."],
+    ["Dependência", "Quanto dependes das decisões ou recursos de outras pessoas.", "<b>O que é:</b> Necessitar de validação.<br><b>Como mover:</b> Assume o controlo."],
+    ["Desconhecimento", "Quanto do caminho necessário ainda é incerto ou desconhecido.", "<b>O que é:</b> Dúvida sobre passos.<br><b>Como mover:</b> Mapeia o caminho."],
+    ["Acontecimentos externos", "Forças imprevisíveis que podem alterar a trajetória.", "<b>O que é:</b> Imprevistos da vida.<br><b>Como mover:</b> Cria planos B."]
+];
+
+function render(list, id, type) {
+    const box = document.getElementById(id);
+    box.innerHTML = "";
+    list.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = `
+        <div>
+            <div class="param-title-wrap">
+                <label><b>${item[0]}</b></label>
+                <button class="info-btn" onclick="toggleHelp('help-${type}-${i}')">?</button>
+            </div>
+            <span class="small">${item[1]}</span>
+            <div class="help-box" id="help-${type}-${i}" style="display:none;">${item[2]}</div>
+            <input data-type="${type}" data-i="${i}" type="range" min="0" max="100" value="35">
+        </div>
+        <div class="value" id="${type}${i}">35</div>`;
+        box.appendChild(div);
+        div.querySelector("input").addEventListener("input", function(e) {
+            document.getElementById(type + i).textContent = e.target.value;
+            updateLiveAverages();
+        });
+    });
+}
+
+function toggleHelp(id) {
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
+}
+
+render(amItems, "am", "am");
+render(ddItems, "dd", "dd");
+
+document.getElementById("feedback").addEventListener("input", function(e) {
+    document.getElementById("feedbackVal").textContent = e.target.value;
+});
+
+function vals(type) { return [...document.querySelectorAll(`input[data-type="${type}"]`)].map(x => Number(x.value)); }
+function avg(array) { return array.reduce((a,b) => a + b, 0) / array.length; }
+
+function updateLiveAverages() {
+    const amVal = Math.round(avg(vals("am")));
+    const ddVal = Math.round(avg(vals("dd")));
+    document.getElementById("amAvg").textContent = amVal;
+    document.getElementById("ddAvg").textContent = ddVal;
+    document.getElementById("amLevel").textContent = amVal > 60 ? "Elevada" : (amVal > 35 ? "Moderada" : "Escassa");
+    document.getElementById("ddLevel").textContent = ddVal > 60 ? "Esmagadora" : (ddVal > 35 ? "Moderada" : "Controlada");
+}
+
+function calculate() {
+    const amValues = vals("am");
+    const ddValues = vals("dd");
+    const am = avg(amValues);
+    const ddBase = avg(ddValues);
+    const feedback = Number(document.getElementById("feedback").value);
+    const ea = Number(document.getElementById("eaSelect").value);
+
+    const dd = Math.min(100, ddBase + (feedback * 0.30));
+    const effectiveAM = am * ea;
+    const netTrajectory = effectiveAM - dd;
+
+    document.getElementById("results").style.display = "block";
+    document.getElementById("rAM").textContent = Math.round(am);
+    document.getElementById("rDD").textContent = Math.round(dd);
+    document.getElementById("rEffAM").textContent = Math.round(effectiveAM);
+    document.getElementById("rMargin").textContent = (netTrajectory >= 0 ? "+" : "") + Math.round(netTrajectory);
+    document.getElementById("barAM").style.width = Math.min(100, am) + "%";
+    document.getElementById("barDD").style.width = Math.min(100, dd) + "%";
+
+    let title, text, quote, strategy;
+    if (netTrajectory >= 20) {
+        title = "Trajetória Dominada pelo Agente (Alavancagem Positiva)";
+        text = "A capacidade de intervenção supera a pressão inercial da trajetória atual.";
+        quote = "Não precisas necessariamente de aplicar mais força.";
+        strategy = "Consolida a tua posição aplicando a margem em intervenções estruturais.";
+    } else if (netTrajectory >= -15) {
+        title = "Zona de Equilíbrio Instável (Manutenção Compensatória)";
+        text = "O efeito útil está próximo da pressão que mantém o estado atual.";
+        quote = "Quando a AM e a DD estão equilibradas, o tipo de intervenção (EA) é determinante.";
+        strategy = "Evita aumentar o esforço voluntarista. Migra para o modo Estrutural.";
+    } else {
+        title = "Inércia Causal Dominante (Défice de Alavancagem)";
+        text = "A configuração atual tende a reproduzir-se continuamente.";
+        quote = "Focar em mudar as condições do ambiente é mais eficiente do que o esforço direto.";
+        strategy = "RECOMENDAÇÃO: Seleciona o fator de DD mais elevado e aplica uma intervenção pontual.";
+    }
+    document.getElementById("rTitle").textContent = title;
+    document.getElementById("rText").textContent = text;
+    document.getElementById("rQuote").textContent = quote;
+    document.getElementById("strategy").textContent = strategy;
+
+    let ddList = ddValues.map((v, i) => ({ name: ddItems[i][0], val: v })).sort((a,b) => b.val - a.val);
+    let ddTbl = "<tr><td><b>Fator de Inércia (DD)</b></td><td><b>Pressão</b></td></tr>";
+    ddList.slice(0,4).forEach(item => { ddTbl += `<tr><td>${item.name}</td><td>${Math.round(item.val)}</td></tr>`; });
+    document.getElementById("ddTable").innerHTML = ddTbl;
+
+    let amList = amValues.map((v, i) => ({ name: amItems[i][0], def: 100 - v })).sort((a,b) => b.def - a.def);
+    let amTbl = "<tr><td><b>Recurso em Défice (AM)</b></td><td><b>Défice</b></td></tr>";
+    amList.slice(0,4).forEach(item => { amTbl += `<tr><td>${item.name}</td><td>${Math.round(item.def)}</td></tr>`; });
+    document.getElementById("amTable").innerHTML = amTbl;
+
+    document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function fillExample() {
+    document.getElementById("goal").value = "Me tornar treinador de futebol";
+    const amEx = [38, 50, 55, 60, 60, 55, 45];
+    const ddEx = [80, 70, 65, 60, 85, 75, 50, 40];
+    document.querySelectorAll('input[data-type="am"]').forEach((el, i) => { el.value = amEx[i]; document.getElementById("am" + i).textContent = amEx[i]; });
+    document.querySelectorAll('input[data-type="dd"]').forEach((el, i) => { el.value = ddEx[i]; document.getElementById("dd" + i).textContent = ddEx[i]; });
+    document.getElementById("feedback").value = 30; document.getElementById("feedbackVal").textContent = 30;
+    document.getElementById("eaSelect").value = "1.8";
+    updateLiveAverages(); calculate();
+}
+
+function saveTest() { localStorage.setItem("am_v2_test", JSON.stringify({ goal: document.getElementById("goal").value, context: document.getElementById("context").value, experiment: document.getElementById("experiment").value })); alert("Guardado!"); }
+function loadTest() { const s = localStorage.getItem("am_v2_test"); if(!s) return alert("Sem testes."); const d = JSON.parse(s); document.getElementById("goal").value = d.goal||""; document.getElementById("context").value = d.context||""; document.getElementById("experiment").value = d.experiment||""; alert("Recuperado!"); }
+updateLiveAverages();
+</script>
+</body>
+</html>
